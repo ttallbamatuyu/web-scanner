@@ -29,6 +29,16 @@ class Reporter:
                     elif vuln.severity == "High":
                         run.font.color.rgb = RGBColor(255, 102, 0) # Orange
                     
+                    if vuln.cwe and vuln.cvss_score:
+                        cvss_para = doc.add_paragraph(f"표준 식별자: ")
+                        cvss_para.add_run(f"[{vuln.cwe}]").font.bold = True
+                        cvss_para.add_run(f" | CVSS Score: ")
+                        score_run = cvss_para.add_run(str(vuln.cvss_score))
+                        score_run.font.bold = True
+                        if vuln.cvss_score >= 9.0: score_run.font.color.rgb = RGBColor(255,0,0)
+                        elif vuln.cvss_score >= 7.0: score_run.font.color.rgb = RGBColor(255,102,0)
+                        else: score_run.font.color.rgb = RGBColor(200,200,0)
+                    
                     doc.add_paragraph(f"대상 URL: {vuln.endpoint.url}")
                     doc.add_paragraph(f"HTTP 메서드: {vuln.endpoint.method}")
                     doc.add_paragraph(f"영향받은 파라미터: {list(vuln.endpoint.parameters.keys())}")
@@ -43,6 +53,12 @@ class Reporter:
                     ev_para = doc.add_paragraph()
                     er = ev_para.add_run(vuln.evidence)
                     er.font.name = 'Courier New'
+                    
+                    if vuln.remediation:
+                        doc.add_paragraph("해결 방안 (Remediation):", style='List Bullet')
+                        rem_para = doc.add_paragraph()
+                        rem_r = rem_para.add_run(vuln.remediation)
+                        rem_r.font.color.rgb = RGBColor(0, 102, 204)
                     
                     doc.add_paragraph("-" * 50)
             

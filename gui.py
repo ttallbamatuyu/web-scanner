@@ -53,6 +53,29 @@ class ScannerApp(ctk.CTk):
         self.target_entry.grid(row=2, column=0, padx=20, pady=(5, 20), sticky="ew")
         self.target_entry.insert(0, "http://127.0.0.1:5000/") # Default for local testing
 
+        # Output file name
+        self.output_label = ctk.CTkLabel(self.sidebar_frame, text="Report File Name (Word):", font=ctk.CTkFont(size=14))
+        self.output_label.grid(row=3, column=0, padx=20, pady=(10, 0), sticky="w")
+        
+        self.output_entry = ctk.CTkEntry(self.sidebar_frame, placeholder_text="result.docx")
+        self.output_entry.grid(row=4, column=0, padx=20, pady=(5, 15), sticky="ew")
+        self.output_entry.insert(0, "result.docx")
+
+        # Cookies input
+        self.cookie_label = ctk.CTkLabel(self.sidebar_frame, text="Cookies (e.g. session=123):", font=ctk.CTkFont(size=14))
+        self.cookie_label.grid(row=5, column=0, padx=20, pady=(10, 0), sticky="w")
+        
+        self.cookie_entry = ctk.CTkEntry(self.sidebar_frame, placeholder_text="session_id=admin")
+        self.cookie_entry.grid(row=6, column=0, padx=20, pady=(5, 15), sticky="ew")
+
+        # Threads input
+        self.threads_label = ctk.CTkLabel(self.sidebar_frame, text="Threads (Concurrency):", font=ctk.CTkFont(size=14))
+        self.threads_label.grid(row=7, column=0, padx=20, pady=(10, 0), sticky="w")
+        
+        self.threads_entry = ctk.CTkEntry(self.sidebar_frame, placeholder_text="5")
+        self.threads_entry.grid(row=8, column=0, padx=20, pady=(5, 15), sticky="ew")
+        self.threads_entry.insert(0, "5")
+
         # Scan Button
         self.scan_btn = ctk.CTkButton(
             self.sidebar_frame, 
@@ -61,15 +84,7 @@ class ScannerApp(ctk.CTk):
             font=ctk.CTkFont(size=14, weight="bold"),
             height=40
         )
-        self.scan_btn.grid(row=3, column=0, padx=20, pady=(10, 30))
-
-        # Output file name
-        self.output_label = ctk.CTkLabel(self.sidebar_frame, text="Report File Name (Word):", font=ctk.CTkFont(size=14))
-        self.output_label.grid(row=4, column=0, padx=20, pady=(10, 0), sticky="w")
-        
-        self.output_entry = ctk.CTkEntry(self.sidebar_frame, placeholder_text="result.docx")
-        self.output_entry.grid(row=5, column=0, padx=20, pady=(5, 20), sticky="ew")
-        self.output_entry.insert(0, "result.docx")
+        self.scan_btn.grid(row=9, column=0, padx=20, pady=(20, 30))
 
         # --- Main Workspace ---
         self.main_frame = ctk.CTkFrame(self, corner_radius=10)
@@ -96,6 +111,8 @@ class ScannerApp(ctk.CTk):
         
         url = self.target_entry.get().strip()
         out_file = self.output_entry.get().strip()
+        cookie_str = self.cookie_entry.get().strip()
+        threads_str = self.threads_entry.get().strip()
         
         if not url:
             print("[!] Error: Target URL cannot be empty.")
@@ -109,15 +126,27 @@ class ScannerApp(ctk.CTk):
         self.log_box.delete("0.0", "end")
 
         # Run scan logic in background to keep GUI responsive
-        threading.Thread(target=self.run_scan_logic, args=(url, out_file), daemon=True).start()
+        threading.Thread(target=self.run_scan_logic, args=(url, out_file, cookie_str, threads_str), daemon=True).start()
 
-    def run_scan_logic(self, target_url, output_file):
+    def run_scan_logic(self, target_url, output_file, cookie_str, threads_str):
         try:
             print(f"[{datetime.now().strftime('%H:%M:%S')}] Launching Scanner Engine...")
-            config = ScanConfig(target_url=target_url)
+            cookies_dict = {}
+            if cookie_str:
+                for item in cookie_str.split(';'):
+                    if '=' in item:
+                        k, v = item.split('=', 1)
+                        cookies_dict[k.strip()] = v.strip()
+            
+            try:
+                threads = int(threads_str)
+            except ValueError:
+                threads = 5
+                
+            config = ScanConfig(target_url=target_url, cookies=cookies_dict, threads=threads)
 
             # 1. Crawl
-            crawler = Crawler(config.target_url)
+            crawler = Crawler(config.target_url, cookies=cookies_dict)
             endpoints = crawler.crawl()
 
             # 2. Scan

